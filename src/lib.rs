@@ -139,6 +139,7 @@ mod tests {
         let path = dir.child("test");
         fs::OpenOptions::new()
             .create(true)
+            .truncate(false)
             .write(true)
             .open(&path)
             .unwrap();
