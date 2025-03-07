@@ -1,5 +1,46 @@
 //! Provides mutual exclusion on a file using
 //! [`flock(2)`](https://man7.org/linux/man-pages/man2/flock.2.html).
+//!
+//! # Usage
+//!
+//! ## `lock()`
+//!
+//! ```
+//! let path = "path/to/my/file.txt";
+//! # let dir = temp_dir::TempDir::new().unwrap();
+//! # let path = dir.child("test");
+//! # std::fs::OpenOptions::new().create(true).write(true).open(&path).unwrap();
+//!
+//! {
+//!     let _guard = fmutex::lock(path)?;
+//!
+//!     // do mutually exclusive stuff here
+//!
+//! } // <-- `_guard` dropped here and the lock is released
+//! # Ok::<(), std::io::Error>(())
+//! ```
+//!
+//! ## `try_lock()`
+//!
+//! ```
+//! let path = "path/to/my/file.txt";
+//! # let dir = temp_dir::TempDir::new().unwrap();
+//! # let path = dir.child("test");
+//! # std::fs::OpenOptions::new().create(true).write(true).open(&path).unwrap();
+//!
+//! match fmutex::try_lock(path)? {
+//!     Some(_guard) => {
+//!
+//!         // do mutually exclusive stuff here
+//!
+//!     } // <-- `_guard` dropped here and the lock is released
+//!
+//!     None => {
+//!         eprintln!("the lock could not be acquired!");
+//!     }
+//! }
+//! # Ok::<(), std::io::Error>(())
+//! ```
 
 use std::fs;
 use std::fs::File;
@@ -23,22 +64,6 @@ pub struct Guard(File);
 ///
 /// If the file cannot be read.
 ///
-/// # Examples
-///
-/// ```
-/// let path = "path/to/my/file.txt";
-/// # let dir = temp_dir::TempDir::new().unwrap();
-/// # let path = dir.child("test");
-/// # std::fs::OpenOptions::new().create(true).write(true).open(&path).unwrap();
-///
-/// {
-///     let _guard = fmutex::lock(path)?;
-///
-///     // do mutually exclusive stuff here
-///
-/// } // <-- `_guard` dropped here and the lock is released
-/// # Ok::<(), std::io::Error>(())
-/// ```
 pub fn lock<P>(path: P) -> io::Result<Guard>
 where
     P: AsRef<Path>,
@@ -58,27 +83,6 @@ where
 ///
 /// If the file cannot be read.
 ///
-/// # Examples
-///
-/// ```
-/// let path = "path/to/my/file.txt";
-/// # let dir = temp_dir::TempDir::new().unwrap();
-/// # let path = dir.child("test");
-/// # std::fs::OpenOptions::new().create(true).write(true).open(&path).unwrap();
-///
-/// match fmutex::try_lock(path)? {
-///     Some(_guard) => {
-///
-///         // do mutually exclusive stuff here
-///
-///     } // <-- `_guard` dropped here and the lock is released
-///
-///     None => {
-///         eprintln!("the lock could not be acquired!");
-///     }
-/// }
-/// # Ok::<(), std::io::Error>(())
-/// ```
 pub fn try_lock<P>(path: P) -> io::Result<Option<Guard>>
 where
     P: AsRef<Path>,
