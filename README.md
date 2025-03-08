@@ -6,30 +6,83 @@
 [![Docs.rs Latest](https://badgers.space/badge/docs.rs/latest/blue)](https://docs.rs/fmutex)
 [![Build Status](https://badgers.space/github/checks/rossmacarthur/fmutex?label=build)](https://github.com/rossmacarthur/fmutex/actions/workflows/build.yaml)
 
-Provides mutual exclusion on a file using
-[`flock(2)`](https://man7.org/linux/man-pages/man2/flock.2.html).
+Mutual exclusion across processes on a file descriptor or path.
 
-## Usage
+- On Unix-like systems this is implemented use
+  [`flock(2)`](https://man7.org/linux/man-pages/man2/flock.2.html).
+- On Windows this is implemented using
+  [`LockFileEx`](https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-lockfileex).
 
-### `lock()`
+## 🚀 Getting started
+
+First `fmutex` to your Cargo manifest.
+
+```sh
+cargo add fmutex
+```
+
+Now use one of the provided functions to lock a file descriptor (Unix) or
+handle (Windows) or a file path.
+
+- [`lock()`](#lock) to acquire a lock on a file descriptor or handle.
+- [`try_lock()`](#try_lock) to attempt to acquire a lock on a file
+  descriptor or handle.
+- [`lock_path()`](#lock_path) to acquire a lock on a file path.
+- [`try_lock_path()`](#try_lock_path) to attempt to acquire a lock on a file
+  path.
+
+## 🤸 Usage
+
+### [`lock()`][lock]
 
 ```rust
-let path = "path/to/my/file.txt";
+let fd = fs::OpenOptions::new().create(true).write(true).open(&path)?;
 
 {
-    let _guard = fmutex::lock(path)?;
+    let _guard = fmutex::lock(&fd)?;
 
     // do mutually exclusive stuff here
 
 } // <-- `_guard` dropped here and the lock is released
 ```
 
-### `try_lock()`
+### [`try_lock()`][try_lock]
+
+```rust
+let fd = fs::OpenOptions::new().create(true).write(true).open(&path)?;
+
+match fmutex::try_lock(&fd)? {
+    Some(_guard) => {
+
+        // do mutually exclusive stuff here
+
+    } // <-- `_guard` dropped here and the lock is released
+
+    None => {
+        eprintln!("the lock could not be acquired!");
+    }
+}
+```
+
+### [`lock_path()`][lock_path]
 
 ```rust
 let path = "path/to/my/file.txt";
 
-match fmutex::try_lock(path)? {
+{
+    let _guard = fmutex::lock_path(path)?;
+
+    // do mutually exclusive stuff here
+
+} // <-- `_guard` dropped here and the lock is released
+```
+
+### [`try_lock_path()`][try_lock_path]
+
+```rust
+let path = "path/to/my/file.txt";
+
+match fmutex::try_lock_path(path)? {
     Some(_guard) => {
 
         // do mutually exclusive stuff here
@@ -47,3 +100,9 @@ match fmutex::try_lock(path)? {
 This project is distributed under the terms of both the MIT license and the Apache License (Version 2.0).
 
 See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
+
+
+[lock]: https://docs.rs/fmutex/latest/fmutex/fn.lock.html
+[lock_path]: https://docs.rs/fmutex/latest/fmutex/fn.lock_path.html
+[try_lock]: https://docs.rs/fmutex/latest/fmutex/fn.try_lock.html
+[try_lock_path]: https://docs.rs/fmutex/latest/fmutex/fn.try_lock_path.html

@@ -3,15 +3,18 @@ name = "fmutex"
 version = "0.1.0"
 authors = ["Ross MacArthur <ross@macarthur.io>"]
 edition = "2018"
-description = "Provides mutual exclusion on a file using flock(2)"
+description = "Cross-platform mutual exclusion across processes on a file or path"
 readme = "README.md"
 repository = "https://github.com/rossmacarthur/fmutex"
 license = "MIT OR Apache-2.0"
-keywords = ["file", "lock", "mutex", "flock", "fcntl"]
+keywords = ["raii", "file", "lock", "mutex", "flock"]
 categories = ["concurrency", "filesystem"]
 
-[dependencies]
+[target.'cfg(unix)'.dependencies]
 libc = "0.2.117"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59.0", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_IO"] }
 
 [dev-dependencies]
 temp-dir = "0.1.11"
