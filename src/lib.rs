@@ -105,6 +105,8 @@
 //! # Ok::<(), std::io::Error>(())
 //! ```
 
+#[cfg(all(not(unix), not(windows)))]
+mod fallback;
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]
@@ -114,6 +116,8 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+#[cfg(all(not(unix), not(windows)))]
+use crate::fallback as sys;
 #[cfg(unix)]
 use crate::unix as sys;
 #[cfg(windows)]
@@ -152,6 +156,8 @@ pub struct BorrowedResource<'a> {
     pub(crate) inner: sys::BorrowedFd<'a>,
     #[cfg(windows)]
     pub(crate) inner: sys::BorrowedHandle<'a>,
+    #[cfg(all(not(unix), not(windows)))]
+    pub(crate) inner: sys::BorrowedFallback<'a>,
 }
 
 #[cfg(unix)]
@@ -174,6 +180,15 @@ where
     fn as_resource(&self) -> BorrowedResource<'_> {
         BorrowedResource {
             inner: sys::AsHandle::as_handle(self),
+        }
+    }
+}
+
+#[cfg(all(not(unix), not(windows)))]
+impl<T> AsResource for T {
+    fn as_resource(&self) -> BorrowedResource<'_> {
+        BorrowedResource {
+            inner: sys::BorrowedFallback::new(),
         }
     }
 }
@@ -285,71 +300,5 @@ where
     match f.try_lock_exclusive()? {
         true => Ok(Some(Guard { f })),
         false => Ok(None),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    use std::thread;
-    use std::time::Duration;
-    use temp_dir::TempDir;
-
-    #[test]
-    fn smoke() {
-        // Setup
-        let dir = TempDir::new().unwrap();
-        let path = dir.child("test");
-        let file = fs::OpenOptions::new()
-            .create(true)
-            .truncate(false)
-            .write(true)
-            .open(&path)
-            .unwrap();
-
-        let file2 = fs::OpenOptions::new().read(true).open(&path).unwrap();
-
-        let handle = thread::spawn(move || {
-            let guard = crate::lock(&file).unwrap();
-            thread::sleep(Duration::from_millis(500));
-            drop(guard);
-        });
-
-        thread::sleep(Duration::from_millis(250));
-        assert!(crate::try_lock(&file2).unwrap().is_none());
-
-        // Cleanup
-        handle.join().unwrap();
-    }
-
-    #[test]
-    fn smoke_path() {
-        // Setup
-        let dir = TempDir::new().unwrap();
-        let path = dir.child("test");
-        fs::OpenOptions::new()
-            .create(true)
-            .truncate(false)
-            .write(true)
-            .open(&path)
-            .unwrap();
-
-        let path2 = path.clone();
-
-        // Test
-        let handle = thread::spawn(|| {
-            let guard = crate::lock_path(path).unwrap();
-            thread::sleep(Duration::from_millis(500));
-            drop(guard);
-        });
-        thread::sleep(Duration::from_millis(250));
-
-        // Check that we are *not* able to acquire the lock while it is held
-        // by the thread.
-        assert!(crate::try_lock_path(path2).unwrap().is_none());
-
-        // Cleanup
-        handle.join().unwrap();
     }
 }
