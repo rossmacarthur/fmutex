@@ -1,6 +1,6 @@
 [package]
 name = "fmutex"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Ross MacArthur <ross@macarthur.io>"]
 edition = "2018"
 rust-version = "1.66.0"
