@@ -22,6 +22,14 @@ pub fn try_lock_exclusive(_f: BorrowedFallback<'_>) -> io::Result<bool> {
     Err(err())
 }
 
+pub fn lock_shared(_f: BorrowedFallback<'_>) -> io::Result<()> {
+    Err(err())
+}
+
+pub fn try_lock_shared(_f: BorrowedFallback<'_>) -> io::Result<bool> {
+    Err(err())
+}
+
 pub fn unlock(_f: BorrowedFallback<'_>) -> io::Result<()> {
     Err(err())
 }

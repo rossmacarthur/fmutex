@@ -26,6 +26,23 @@ pub fn try_lock_exclusive(h: BorrowedHandle<'_>) -> io::Result<bool> {
     }
 }
 
+pub fn lock_shared(h: BorrowedHandle<'_>) -> io::Result<()> {
+    lock_file(h, 0)
+}
+
+pub fn try_lock_shared(h: BorrowedHandle<'_>) -> io::Result<bool> {
+    match lock_file(h, LOCKFILE_FAIL_IMMEDIATELY) {
+        Ok(()) => Ok(true),
+        Err(err)
+            if err.raw_os_error() == Some(ERROR_IO_PENDING as i32)
+                || err.raw_os_error() == Some(ERROR_LOCK_VIOLATION as i32) =>
+        {
+            Ok(false)
+        }
+        Err(err) => Err(err),
+    }
+}
+
 pub fn unlock(h: BorrowedHandle<'_>) -> io::Result<()> {
     unsafe {
         let r = UnlockFile(h.as_raw_handle() as HANDLE, 0, 0, !0, !0);

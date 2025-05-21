@@ -16,6 +16,18 @@ pub fn try_lock_exclusive(fd: BorrowedFd<'_>) -> io::Result<bool> {
     }
 }
 
+pub fn lock_shared(fd: BorrowedFd<'_>) -> io::Result<()> {
+    flock(fd, libc::LOCK_SH)
+}
+
+pub fn try_lock_shared(fd: BorrowedFd<'_>) -> io::Result<bool> {
+    match flock(fd, libc::LOCK_SH | libc::LOCK_NB) {
+        Ok(()) => Ok(true),
+        Err(err) if err.kind() == io::ErrorKind::WouldBlock => Ok(false),
+        Err(err) => Err(err),
+    }
+}
+
 pub fn unlock(fd: BorrowedFd<'_>) -> io::Result<()> {
     flock(fd, libc::LOCK_UN)
 }

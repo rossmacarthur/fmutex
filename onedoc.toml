@@ -1,5 +1,9 @@
 [links]
-"lock()" = "https://docs.rs/fmutex/latest/fmutex/fn.lock.html"
-"try_lock()" = "https://docs.rs/fmutex/latest/fmutex/fn.try_lock.html"
-"lock_path()" = "https://docs.rs/fmutex/latest/fmutex/fn.lock_path.html"
-"try_lock_path()" = "https://docs.rs/fmutex/latest/fmutex/fn.try_lock_path.html"
+"lock_exclusive()" = "https://docs.rs/fmutex/latest/fmutex/fn.lock_exclusive.html"
+"try_lock_exclusive()" = "https://docs.rs/fmutex/latest/fmutex/fn.try_lock_exclusive.html"
+"lock_exclusive_path()" = "https://docs.rs/fmutex/latest/fmutex/fn.lock_exclusive_path.html"
+"try_lock_exclusive_path()" = "https://docs.rs/fmutex/latest/fmutex/fn.try_lock_exclusive_path.html"
+"lock_shared()" = "https://docs.rs/fmutex/latest/fmutex/fn.lock_shared.html"
+"try_lock_shared()" = "https://docs.rs/fmutex/latest/fmutex/fn.try_lock_shared.html"
+"lock_shared_path()" = "https://docs.rs/fmutex/latest/fmutex/fn.lock_shared_path.html"
+"try_lock_shared_path()" = "https://docs.rs/fmutex/latest/fmutex/fn.try_lock_shared_path.html"
